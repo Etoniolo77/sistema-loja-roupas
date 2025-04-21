@@ -6,9 +6,13 @@ const { auth, estoquista } = require('../middlewares/auth');
 // Obter todos os produtos
 router.get('/', auth, async (req, res) => {
   try {
-    const produtos = await db.promiseAll(
-      'SELECT id, nome, tamanho, quantidade, preco, created_at, updated_at FROM produtos ORDER BY nome, tamanho'
-    );
+    const produtos = await db.promiseAll(`
+      SELECT p.id, p.nome, p.tamanho, p.quantidade, p.preco, p.fornecedor_id, 
+             f.nome as fornecedor_nome, p.created_at, p.updated_at 
+      FROM produtos p
+      LEFT JOIN fornecedores f ON p.fornecedor_id = f.id
+      ORDER BY p.nome, p.tamanho
+    `);
     res.json(produtos);
   } catch (error) {
     console.error('Erro ao buscar produtos:', error);
@@ -20,10 +24,13 @@ router.get('/', auth, async (req, res) => {
 router.get('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
-    const produto = await db.promiseGet(
-      'SELECT id, nome, tamanho, quantidade, preco, created_at, updated_at FROM produtos WHERE id = ?',
-      [id]
-    );
+    const produto = await db.promiseGet(`
+      SELECT p.id, p.nome, p.tamanho, p.quantidade, p.preco, p.fornecedor_id, 
+             f.nome as fornecedor_nome, p.created_at, p.updated_at 
+      FROM produtos p
+      LEFT JOIN fornecedores f ON p.fornecedor_id = f.id
+      WHERE p.id = ?
+    `, [id]);
     
     if (!produto) {
       return res.status(404).json({ message: 'Produto não encontrado.' });
@@ -39,7 +46,7 @@ router.get('/:id', auth, async (req, res) => {
 // Criar um novo produto
 router.post('/', auth, estoquista, async (req, res) => {
   try {
-    const { nome, tamanho, quantidade, preco } = req.body;
+    const { nome, tamanho, quantidade, preco, fornecedor_id } = req.body;
     
     // Validações básicas
     if (!nome || !tamanho || quantidade === undefined || preco === undefined) {
@@ -73,10 +80,18 @@ router.post('/', auth, estoquista, async (req, res) => {
       });
     }
     
+    // Verifica se o fornecedor existe, se fornecido
+    if (fornecedor_id) {
+      const fornecedorExistente = await db.promiseGet('SELECT id FROM fornecedores WHERE id = ?', [fornecedor_id]);
+      if (!fornecedorExistente) {
+        return res.status(400).json({ message: 'Fornecedor não encontrado.' });
+      }
+    }
+    
     // Insere o novo produto
     const result = await db.promiseRun(
-      'INSERT INTO produtos (nome, tamanho, quantidade, preco) VALUES (?, ?, ?, ?)',
-      [nome, tamanho, quantidade, preco]
+      'INSERT INTO produtos (nome, tamanho, quantidade, preco, fornecedor_id) VALUES (?, ?, ?, ?, ?)',
+      [nome, tamanho, quantidade, preco, fornecedor_id || null]
     );
     
     // Se a quantidade inicial for maior que zero, registra a movimentação de estoque
@@ -88,10 +103,13 @@ router.post('/', auth, estoquista, async (req, res) => {
     }
     
     // Retorna o produto criado
-    const novoProduto = await db.promiseGet(
-      'SELECT id, nome, tamanho, quantidade, preco, created_at, updated_at FROM produtos WHERE id = ?',
-      [result.lastID]
-    );
+    const novoProduto = await db.promiseGet(`
+      SELECT p.id, p.nome, p.tamanho, p.quantidade, p.preco, p.fornecedor_id, 
+             f.nome as fornecedor_nome, p.created_at, p.updated_at 
+      FROM produtos p
+      LEFT JOIN fornecedores f ON p.fornecedor_id = f.id
+      WHERE p.id = ?
+    `, [result.lastID]);
     
     res.status(201).json(novoProduto);
   } catch (error) {
@@ -104,7 +122,7 @@ router.post('/', auth, estoquista, async (req, res) => {
 router.put('/:id', auth, estoquista, async (req, res) => {
   try {
     const { id } = req.params;
-    const { nome, tamanho, preco } = req.body;
+    const { nome, tamanho, preco, fornecedor_id } = req.body;
     
     // Validações básicas
     if (!nome || !tamanho || preco === undefined) {
@@ -140,17 +158,28 @@ router.put('/:id', auth, estoquista, async (req, res) => {
       });
     }
     
-    // Atualiza o produto (apenas nome, tamanho e preço - quantidade é gerenciada separadamente)
+    // Verifica se o fornecedor existe, se fornecido
+    if (fornecedor_id) {
+      const fornecedorExistente = await db.promiseGet('SELECT id FROM fornecedores WHERE id = ?', [fornecedor_id]);
+      if (!fornecedorExistente) {
+        return res.status(400).json({ message: 'Fornecedor não encontrado.' });
+      }
+    }
+    
+    // Atualiza o produto (apenas nome, tamanho, preço e fornecedor - quantidade é gerenciada separadamente)
     await db.promiseRun(
-      'UPDATE produtos SET nome = ?, tamanho = ?, preco = ? WHERE id = ?',
-      [nome, tamanho, preco, id]
+      'UPDATE produtos SET nome = ?, tamanho = ?, preco = ?, fornecedor_id = ? WHERE id = ?',
+      [nome, tamanho, preco, fornecedor_id || null, id]
     );
     
     // Retorna o produto atualizado
-    const produtoAtualizado = await db.promiseGet(
-      'SELECT id, nome, tamanho, quantidade, preco, created_at, updated_at FROM produtos WHERE id = ?',
-      [id]
-    );
+    const produtoAtualizado = await db.promiseGet(`
+      SELECT p.id, p.nome, p.tamanho, p.quantidade, p.preco, p.fornecedor_id, 
+             f.nome as fornecedor_nome, p.created_at, p.updated_at 
+      FROM produtos p
+      LEFT JOIN fornecedores f ON p.fornecedor_id = f.id
+      WHERE p.id = ?
+    `, [id]);
     
     res.json(produtoAtualizado);
   } catch (error) {
