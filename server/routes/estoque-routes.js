@@ -229,4 +229,43 @@ router.get('/baixo', auth, async (req, res) => {
   }
 });
 
+router.post('/troca', async (req, res) => {
+  const { produtoIdOriginal, produtoIdNovo, quantidade } = req.body;
+
+  try {
+    // Verificar se os produtos existem
+    const produtoOriginal = await db.promiseGet('SELECT id, quantidade FROM produtos WHERE id = ?', [produtoIdOriginal]);
+    const produtoNovo = await db.promiseGet('SELECT id, quantidade FROM produtos WHERE id = ?', [produtoIdNovo]);
+
+    if (!produtoOriginal || !produtoNovo) {
+      return res.status(404).json({ message: 'Produto não encontrado.' });
+    }
+
+    // Verificar se há quantidade suficiente para troca
+    if (produtoOriginal.quantidade < quantidade) {
+      return res.status(400).json({ message: 'Quantidade insuficiente para troca.' });
+    }
+
+    // Iniciar transação
+    await db.beginTransaction();
+
+    // Atualizar quantidades
+    await db.promiseRun('UPDATE produtos SET quantidade = quantidade - ? WHERE id = ?', [quantidade, produtoIdOriginal]);
+    await db.promiseRun('UPDATE produtos SET quantidade = quantidade + ? WHERE id = ?', [quantidade, produtoIdNovo]);
+
+    // Registrar troca
+    await db.promiseRun('INSERT INTO trocas (produto_id_original, produto_id_novo, quantidade) VALUES (?, ?, ?)', [produtoIdOriginal, produtoIdNovo, quantidade]);
+
+    // Commit da transação
+    await db.commit();
+
+    res.json({ message: 'Troca realizada com sucesso.' });
+  } catch (error) {
+    // Rollback em caso de erro
+    await db.rollback();
+    console.error('Erro ao realizar troca:', error);
+    res.status(500).json({ message: 'Erro ao realizar troca.' });
+  }
+});
+
 module.exports = router;

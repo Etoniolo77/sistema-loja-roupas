@@ -7,7 +7,7 @@ const { auth, vendedor } = require('../middlewares/auth');
 router.get('/', auth, async (req, res) => {
   try {
     const clientes = await db.promiseAll(
-      'SELECT id, nome, instagram, whatsapp, observacoes, created_at, updated_at FROM clientes ORDER BY nome'
+      'SELECT id, nome, instagram, whatsapp, cpf, data_nascimento, endereco, observacoes, created_at, updated_at FROM clientes ORDER BY nome'
     );
     res.json(clientes);
   } catch (error) {
@@ -21,7 +21,7 @@ router.get('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
     const cliente = await db.promiseGet(
-      'SELECT id, nome, instagram, whatsapp, observacoes, created_at, updated_at FROM clientes WHERE id = ?',
+      'SELECT id, nome, instagram, whatsapp, cpf, data_nascimento, endereco, observacoes, created_at, updated_at FROM clientes WHERE id = ?',
       [id]
     );
     
@@ -39,7 +39,7 @@ router.get('/:id', auth, async (req, res) => {
 // Criar um novo cliente
 router.post('/', auth, vendedor, async (req, res) => {
   try {
-    const { nome, instagram, whatsapp, observacoes } = req.body;
+    const { nome, instagram, whatsapp, cpf, data_nascimento, endereco, observacoes } = req.body;
     
     // Validações básicas
     if (!nome || !whatsapp) {
@@ -48,13 +48,13 @@ router.post('/', auth, vendedor, async (req, res) => {
     
     // Insere o novo cliente
     const result = await db.promiseRun(
-      'INSERT INTO clientes (nome, instagram, whatsapp, observacoes) VALUES (?, ?, ?, ?)',
-      [nome, instagram || '', whatsapp, observacoes || '']
+      'INSERT INTO clientes (nome, instagram, whatsapp, cpf, data_nascimento, endereco, observacoes) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [nome, instagram || '', whatsapp, cpf || '', data_nascimento || '', endereco || '', observacoes || '']
     );
     
     // Retorna o cliente criado
     const novoCliente = await db.promiseGet(
-      'SELECT id, nome, instagram, whatsapp, observacoes, created_at, updated_at FROM clientes WHERE id = ?',
+      'SELECT id, nome, instagram, whatsapp, cpf, data_nascimento, endereco, observacoes, created_at, updated_at FROM clientes WHERE id = ?',
       [result.lastID]
     );
     
@@ -69,7 +69,7 @@ router.post('/', auth, vendedor, async (req, res) => {
 router.put('/:id', auth, vendedor, async (req, res) => {
   try {
     const { id } = req.params;
-    const { nome, instagram, whatsapp, observacoes } = req.body;
+    const { nome, instagram, whatsapp, cpf, data_nascimento, endereco, observacoes } = req.body;
     
     // Validações básicas
     if (!nome || !whatsapp) {
@@ -84,13 +84,13 @@ router.put('/:id', auth, vendedor, async (req, res) => {
     
     // Atualiza o cliente
     await db.promiseRun(
-      'UPDATE clientes SET nome = ?, instagram = ?, whatsapp = ?, observacoes = ? WHERE id = ?',
-      [nome, instagram || '', whatsapp, observacoes || '', id]
+      'UPDATE clientes SET nome = ?, instagram = ?, whatsapp = ?, cpf = ?, data_nascimento = ?, endereco = ?, observacoes = ? WHERE id = ?',
+      [nome, instagram || '', whatsapp, cpf || '', data_nascimento || '', endereco || '', observacoes || '', id]
     );
     
     // Retorna o cliente atualizado
     const clienteAtualizado = await db.promiseGet(
-      'SELECT id, nome, instagram, whatsapp, observacoes, created_at, updated_at FROM clientes WHERE id = ?',
+      'SELECT id, nome, instagram, whatsapp, cpf, data_nascimento, endereco, observacoes, created_at, updated_at FROM clientes WHERE id = ?',
       [id]
     );
     
@@ -131,31 +131,60 @@ router.delete('/:id', auth, vendedor, async (req, res) => {
   }
 });
 
-// Buscar histórico de compras de um cliente
+// Obter vendas de um cliente
 router.get('/:id/vendas', auth, async (req, res) => {
   try {
     const { id } = req.params;
     
+    console.log(`Buscando vendas para o cliente ${id}`);
+    
     // Verifica se o cliente existe
-    const clienteExistente = await db.promiseGet('SELECT id FROM clientes WHERE id = ?', [id]);
-    if (!clienteExistente) {
+    const cliente = await db.promiseGet('SELECT id, nome FROM clientes WHERE id = ?', [id]);
+    if (!cliente) {
+      console.warn(`Cliente ${id} não encontrado`);
       return res.status(404).json({ message: 'Cliente não encontrado.' });
     }
     
-    // Busca as vendas do cliente
+    // Busca as vendas do cliente com informações do vendedor
     const vendas = await db.promiseAll(`
-      SELECT v.id, v.data, v.valor_total, v.status, u.nome as vendedor,
-             (SELECT COUNT(*) FROM venda_itens WHERE venda_id = v.id) as total_itens
+      SELECT 
+        v.id, 
+        v.data, 
+        v.valor_total, 
+        v.status,
+        v.forma_pagamento,
+        u.nome as vendedor,
+        (SELECT COUNT(*) FROM venda_itens WHERE venda_id = v.id) as total_itens
       FROM vendas v
       LEFT JOIN usuarios u ON v.usuario_id = u.id
       WHERE v.cliente_id = ?
       ORDER BY v.data DESC
     `, [id]);
     
+    console.log(`Encontradas ${vendas.length} vendas para o cliente ${id}`);
+    
     res.json(vendas);
   } catch (error) {
-    console.error('Erro ao buscar histórico de compras:', error);
-    res.status(500).json({ message: 'Erro ao buscar histórico de compras.' });
+    console.error(`Erro ao buscar vendas do cliente ${req.params.id}:`, error);
+    res.status(500).json({ message: 'Erro ao buscar vendas do cliente.' });
+  }
+});
+
+router.get('/pendentes', async (req, res) => {
+  try {
+    const query = `
+      SELECT c.id, c.nome, SUM(p.valor) AS valorPendente, MAX(p.data_vencimento) AS dataVencimento
+      FROM clientes c
+      JOIN pagamentos p ON c.id = p.cliente_id
+      WHERE p.status = 'pendente'
+      GROUP BY c.id, c.nome
+      HAVING SUM(p.valor) > 0
+    `;
+    const [result] = await db.query(query);
+    res.json(result);
+  } catch (error) {
+    console.error('Erro ao buscar clientes pendentes:', error);
+    res.status(500).json({ message: 'Erro ao buscar clientes pendentes' });
   }
 });
 

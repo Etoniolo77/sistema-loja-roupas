@@ -1,158 +1,95 @@
 # Sistema de Gerenciamento para Loja de Roupas
 
-Sistema completo para gerenciamento de uma pequena loja de roupas, incluindo controle de vendas, estoque, cadastro de produtos, clientes e usuários.
+Este sistema oferece funcionalidades completas para gerenciamento de uma pequena loja de roupas, incluindo controle de vendas, estoque, cadastro de produtos, clientes e usuários.
 
 ## Funcionalidades
 
-- **Dashboard interativo**: Visão geral de vendas, estoque e clientes
-- **Controle de Vendas**: Registrar, consultar e cancelar vendas
-- **Controle de Estoque**: Gerenciar entradas e saídas de produtos
-- **Cadastro de Produtos**: Adicionar, editar e excluir produtos
-- **Cadastro de Clientes**: Gerenciar informações de clientes
-- **Gerenciamento de Usuários**: Administração de usuários e permissões
-- **Relatórios Gerenciais**: Análises de vendas, estoque e clientes
-- **Interface Responsiva**: Layout adaptável para dispositivos móveis e desktop
-- **Tema Claro/Escuro**: Opção de escolha entre tema claro ou escuro
+- Controle de vendas (registrar, consultar histórico, cancelar)
+- Controle de estoque (adicionar, remover e atualizar produtos)
+- Cadastro de produtos
+- Cadastro de clientes 
+- Gerenciamento de usuários (com diferentes níveis de acesso)
+- Relatórios gerenciais
+- Dashboard interativo
 
-## Requisitos Técnicos
+## Requisitos
 
-- Node.js (v14 ou superior)
-- npm ou yarn
+- Node.js 14.x ou superior
+- npm 6.x ou superior
 
 ## Instalação
 
-1. **Clone o repositório e acesse a pasta do projeto**
-
-```bash
-git clone [url-do-repositório]
-cd loja-roupas
+1. Clone o repositório:
+```
+git clone https://github.com/seu-usuario/sistema-loja-roupas.git
+cd sistema-loja-roupas
 ```
 
-2. **Instale as dependências do servidor**
-
-```bash
-cd server
-npm install
+2. Instale as dependências:
+```
+npm run install-all
 ```
 
-3. **Instale as dependências do cliente**
-
-```bash
-cd ../client
-npm install
+3. Configure o arquivo `.env` na raiz do projeto:
+```
+PORT=5000
+JWT_SECRET=chavesecretaparaomeuapp
+NODE_ENV=development
 ```
 
-4. **Configure o banco de dados**
-
-O sistema utiliza SQLite que não requer instalação adicional. O banco de dados é criado automaticamente na primeira execução.
+4. Inicialize o banco de dados com dados de exemplo:
+```
+npm run seed
+```
 
 ## Executando o Sistema
 
-### Desenvolvimento
+Para executar tanto o backend quanto o frontend simultaneamente:
 
-1. **Inicie o servidor backend**
-
-```bash
-cd server
+```
 npm run dev
 ```
 
-2. **Em outro terminal, inicie o cliente frontend**
+Isso irá iniciar:
+- Backend na porta 5000 (http://localhost:5000)
+- Frontend na porta 3000 (http://localhost:3000)
 
-```bash
-cd client
-npm start
+## Usuários para Teste
+
+O sistema vem com 3 usuários pré-cadastrados:
+
+| Usuário   | Senha     | Perfil     |
+|-----------|-----------|------------|
+| admin     | admin123  | Administrador |
+| vendedor  | vend123   | Vendedor   |
+| estoque   | estq123   | Estoquista |
+
+## Estrutura de Diretórios
+
+```
+sistema-loja-roupas/
+├── client/                # Frontend React
+│   ├── public/
+│   └── src/
+│       ├── components/    # Componentes reutilizáveis
+│       ├── contexts/      # Contextos React
+│       ├── pages/         # Páginas da aplicação
+│       └── App.js         # Componente principal
+├── server/                # Backend Node.js
+│   ├── middlewares/       # Middlewares Express
+│   ├── routes/            # Rotas da API
+│   ├── utils/             # Utilitários
+│   ├── database.js        # Configuração do banco de dados
+│   ├── schema.sql         # Estrutura do banco de dados
+│   └── server.js          # Servidor Express
+└── package.json           # Dependências e scripts
 ```
 
-O frontend estará disponível em `http://localhost:3000` e o backend em `http://localhost:5000`.
+## Solução de Problemas
 
-### Produção
+Se encontrar problemas ao iniciar o sistema:
 
-1. **Construa o frontend**
-
-```bash
-cd client
-npm run build
-```
-
-2. **Inicie o servidor**
-
-```bash
-cd ../server
-npm start
-```
-
-O sistema completo estará disponível em `http://localhost:5000`.
-
-## Acessando o Sistema
-
-Acesse o sistema pelo navegador utilizando os seguintes dados de acesso padrão:
-
-- **Administrador**:
-  - Login: `admin`
-  - Senha: `admin123`
-  
-- **Vendedor**:
-  - Login: `vendedor`
-  - Senha: `vend123`
-  
-- **Estoquista**:
-  - Login: `estoque`
-  - Senha: `estq123`
-
-## Estrutura de Permissões
-
-- **Administrador**: Acesso total ao sistema
-- **Vendedor**: Acesso ao cadastro de clientes, vendas e consulta de produtos
-- **Estoquista**: Acesso ao cadastro de produtos, controle de estoque e consulta de vendas
-
-## Guia de Uso Rápido
-
-### Realizando uma Venda
-
-1. Acesse o menu "Vendas"
-2. Clique em "Nova Venda"
-3. Selecione o cliente (opcional)
-4. Adicione os produtos desejados, informando a quantidade
-5. Verifique o valor total no resumo da venda
-6. Clique em "Finalizar Venda"
-
-### Gerenciando o Estoque
-
-1. Acesse o menu "Estoque"
-2. Para adicionar unidades, localize o produto e clique em "Adicionar"
-3. Para remover unidades, localize o produto e clique em "Remover"
-4. Informe a quantidade e o motivo da movimentação
-
-### Cadastrando Novos Produtos
-
-1. Acesse o menu "Produtos"
-2. Clique em "Novo Produto"
-3. Preencha os dados: nome, tamanho, quantidade inicial e preço
-4. Clique em "Salvar"
-
-### Emitindo Relatórios
-
-1. Acesse o menu "Relatórios"
-2. Selecione o tipo de relatório desejado
-3. Defina os filtros (período, categoria, etc)
-4. Clique em "Gerar Relatório"
-5. Utilize as opções para imprimir ou exportar (PDF/Excel)
-
-## Manutenção e Backup
-
-O banco de dados SQLite está localizado na pasta `server/database.sqlite`. É recomendável realizar backups frequentes deste arquivo para evitar perda de dados.
-
-Para realizar o backup manualmente:
-
-1. Pare o servidor
-2. Copie o arquivo `database.sqlite` para um local seguro
-3. Reinicie o servidor
-
-## Suporte e Contato
-
-Para suporte técnico ou dúvidas sobre o sistema, entre em contato com o administrador do sistema ou com o desenvolvedor responsável.
-
-## Licença
-
-Este software é propriedade da empresa e seu uso é restrito aos termos estabelecidos no contrato de licença.
+1. Verifique se o servidor está em execução na porta 5000
+2. Certifique-se de que o banco de dados foi inicializado com `npm run seed`
+3. Limpe os caches do navegador ou utilize modo anônimo
+4. Verifique se todas as dependências foram instaladas corretamente

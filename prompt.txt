@@ -1,0 +1,41 @@
+Desenvolva uma aplicação completa para um sistema de gerenciamento de uma pequena loja de roupas com as seguintes especificações
+1. Escopo Geral
+    Suporte para até 5 usuários simultâneos.
+    Funcionalidades mínimas: controle de vendas, controle de estoque, cadastro de produtos, cadastro de clientes, gerenciamento de usuários, relatórios gerenciais, dashboard interativo, sistema de crediário, gestão de fornecedores, sistema de devoluções e controle de inventário.
+    Solução completa, incluindo front-end, back-end e banco de dados SQLite.
+2. Estrutura das Tabelas de Dados
+    Clientes campos obrigatórios - nome, Instagram, WhatsApp, CPF, data de nascimento, endereço, observações (texto livre).
+    Produtos campos obrigatórios - nome, tamanho (PP, P, M, G, GG, XG, XXG), quantidade em estoque, preço, fornecedor.
+    Vendas campos obrigatórios - data, cliente, produtos vendidos, valor total, subtotal, desconto (percentual e valor), forma de pagamento (crédito, débito, PIX, crediário, cheque, espécie), status (pendente, concluída, cancelada), usuário responsável.
+    Estoque campos obrigatórios - produto, quantidade disponível, data de atualização, histórico de movimentações (entrada/saída).
+    Usuários campos obrigatórios - nome, login, senha, nível de acesso (admin, vendedor, estoquista).
+    Fornecedores campos obrigatórios - nome, telefone, referência, anotações.
+    Encomendas campos obrigatórios - cliente, tamanho, observação, status de atendimento.
+    Devoluções campos obrigatórios - venda, cliente, motivo, valor total, status (pendente, aprovada, rejeitada), itens devolvidos.
+    Créditos de Cliente campos obrigatórios - cliente, valor, origem (devolução, manual), status (disponível, utilizado, expirado), data de expiração.
+    Inventário campos obrigatórios - data início/fim, status (em andamento, finalizado, cancelado), usuário responsável, itens contados.
+3. Funcionalidades
+    Controle de Vendas - registrar vendas, consultar histórico, cancelar operações, aplicar descontos, múltiplas formas de pagamento.
+    Controle de Estoque - adicionar, remover e atualizar quantidades de produtos, registro de movimentações.
+    Cadastro de Produtos - adicionar, editar e excluir produtos, vinculação com fornecedores.
+    Cadastro de Clientes - adicionar, editar e excluir clientes, histórico de compras.
+    Gerenciamento de Usuários - criar, editar e excluir usuários, com autenticação e permissões por nível de acesso.
+    Sistema de Crediário - controle de pagamentos parcelados, gestão de créditos por devolução.
+    Gestão de Fornecedores - cadastro e controle de fornecedores, vinculação com produtos.
+    Sistema de Encomendas - registro e acompanhamento de pedidos especiais.
+    Sistema de Devoluções - registro de devoluções, aprovação/rejeição, geração de créditos.
+    Controle de Inventário - contagem física, comparação com estoque do sistema.
+    Relatórios Gerenciais - vendas, estoque, clientes, devoluções, crediário (ex. mais vendidos, estoque baixo).
+    Dashboard - visão geral com gráficos de vendas, estoque e desempenho.
+4. Requisitos de Interface
+    Layout moderno, responsivo (adaptável a dispositivos móveis e desktop).
+    Design intuitivo, com navegação simples.
+    Opção de troca de tema (claro/escuro).
+5. Requisitos Técnicos
+    Fornecer todo o código necessário (front-end React, back-end Node.js e banco SQLite).
+    Banco de dados configurado com triggers para atualização automática de estoque e timestamps.
+    Preenchimento prévio das tabelas com dados fictícios realistas para demonstração.
+6. Entrega
+    Solução pronta para execução e apresentação, com instruções básicas de uso.
+    Código organizado, comentado e funcional.
+    Documentação das APIs e estrutura do banco de dados.
